@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="WebGIS 3D Viewer" />
+    <title>WebGIS 3D Viewer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- Load THREE.js and dependencies as non-module scripts (must be before React app) -->
+    <script src="/threejs/three.min.js"></script>
+    <script src="/threejs/OrbitControls.js"></script>
+    <script src="/threejs/ViewHelper.js"></script>
+    <script src="/Qgis2threejs.js"></script>
+    <script src="/dat-gui/dat.gui.min.js"></script>
+    <script src="/dat-gui_panel.js"></script>
+    
+    <!-- React app entry point -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

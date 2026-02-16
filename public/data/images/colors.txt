@@ -1,0 +1,24 @@
+# --- LAND ELEVATION ---
+-50    170 220 255     # Near sea level (very light blue)
+0      200 230 255     # Sea level
+50     180 220 140     # Coastal lowlands (light green-yellow)
+100    160 210 120     # Lowlands light green
+200    120 190 90      # Lowlands green
+500    60 150 60       # Lower hills (deep green)
+1000   220 200 80      # Foothills yellow
+1500   230 170 60      # Highlands light brown
+1800   210 130 40      # Highlands orange-brown
+2100   180 90 30       # Mountain brown
+2400   140 50 20       # High mountains dark brown
+
+# --- SEA DEPTHS ---
+-100   160 200 255     # shallow sea (light aqua)
+-500   120 170 240     # mid depth
+-1000  80 130 220      # deeper sea blue
+-2000  40 90 180       # deep blue
+-4000  20 60 140       # darkest deep sea
+
+
+
+
+# <elevation> <R> <G> <B> [A]
