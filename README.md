@@ -1,11 +1,7 @@
-# WebGIS 3D Viewer - React Version
-
-This is a React conversion of the original Qgis2threejs HTML application. It provides an interactive 3D visualization of geographic data using Three.js.
-
 ## Prerequisites
 
 - Node.js (version 14 or higher)
-- npm or yarn
+- npm
 
 ## Installation
 
@@ -14,30 +10,9 @@ This is a React conversion of the original Qgis2threejs HTML application. It pro
    cd react-app
    ```
 
-2. Install dependencies:
+2. Install dependencies: (React-vite)
    ```bash
    npm install
-   ```
-
-3. Copy the required assets from the parent directory to the public folder:
-   ```bash
-   # Copy JavaScript libraries
-   cp -r ../threejs public/
-   cp -r ../dat-gui public/
-   cp ../Qgis2threejs.js public/
-   cp ../dat-gui_panel.js public/
-   
-   # Copy data folder
-   cp -r ../data public/
-   ```
-
-   On Windows PowerShell, use:
-   ```powershell
-   Copy-Item -Path ..\threejs -Destination public\ -Recurse
-   Copy-Item -Path ..\dat-gui -Destination public\ -Recurse
-   Copy-Item -Path ..\Qgis2threejs.js -Destination public\
-   Copy-Item -Path ..\dat-gui_panel.js -Destination public\
-   Copy-Item -Path ..\data -Destination public\ -Recurse
    ```
 
 ## Running the Application
@@ -46,17 +21,6 @@ Start the development server:
 ```bash
 npm start
 ```
-
-The application will open in your browser at `http://localhost:3000`.
-
-## Building for Production
-
-To create a production build:
-```bash
-npm run build
-```
-
-The optimized files will be in the `build` directory.
 
 ## Project Structure
 
@@ -90,6 +54,7 @@ react-app/
 - Query and attribute display
 - Keyboard shortcuts for navigation
 - Animation support
+- Cross-Section with graph
 
 ## Controls
 

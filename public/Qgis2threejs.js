@@ -1465,15 +1465,41 @@ Q3D.E = function (id) {
 				var profile = [];
 
 				if (path.length > 0) {
-					// Build cumulative distance, elevation, and map coordinates for each clicked point
-					var cumDist = 0;
-					var prev = path[0];
+					// Build a densified line along DEM like QGIS Profile Tool
+					var demLayer = (Q3D && Q3D.application && Q3D.application.scene &&
+						Q3D.application.scene.mapLayers && Q3D.application.scene.mapLayers.length
+					) ? Q3D.application.scene.mapLayers[0] : null;
 
-					for (var i = 0; i < path.length; i++) {
-						var p = path[i];
+					var samplePoints = [];
+
+					if (demLayer && typeof demLayer.segmentizeLineString === "function" && typeof demLayer.getZ === "function") {
+						// Convert clicked 3D points to map coordinates for DEM sampling
+						var lineString = [];
+						for (var li = 0; li < path.length; li++) {
+							var mp = app.scene.toMapCoordinates(path[li]);
+							// x, y in map coords, let zFunc (DEM) fill z
+							lineString.push([mp.x, mp.y, undefined]);
+						}
+
+						samplePoints = demLayer.segmentizeLineString(lineString, function (x, y) {
+							return demLayer.getZ(x, y);
+						});
+					}
+
+					// Fallback: use the raw clicked path if DEM sampling not available
+					if (!samplePoints || !samplePoints.length) {
+						samplePoints = path.slice();
+					}
+
+					// Build cumulative distance, elevation, and map coordinates for each sampled point
+					var cumDist = 0;
+					var prev = samplePoints[0];
+
+					for (var i = 0; i < samplePoints.length; i++) {
+						var p = samplePoints[i];
 
 						if (i > 0) {
-							var dxySeg = vec2.copy(p).distanceTo(prev);
+							var dxySeg = vec2.set(p.x, p.y).distanceTo(vec2.set(prev.x, prev.y));
 							var dzSeg = (p.z - prev.z) / zScale;
 							var seg = Math.sqrt(dxySeg * dxySeg + dzSeg * dzSeg);
 							cumDist += seg;
@@ -1529,18 +1555,18 @@ Q3D.E = function (id) {
 
 					// Right-bottom: elevation profile chart
 					html += '<div id="measure_chart_container" class="measure-chart-container">';
-					html += '<canvas id="measure_profile_chart" width="400" height="200"></canvas>';
+					html += '<canvas id="cross_section_data_chart" width="400" height="200"></canvas>';
 					html += '</div>';
 
 					// Export buttons
-					html += '<br/><div id="measure_export_csv" class="action-btn">Download CSV</div>';
-					html += '<div id="measure_export_chart" class="action-btn">Download Graph</div>';
+					html += '<br/><div id="cross_section_csv" class="action-btn">Download CSV</div>';
+					html += '<div id="cross_section_chart" class="action-btn">Download Graph</div>';
 				}
 
 				gui.popup.show(html, "Measure distance");
 
 				// CSV export
-				var exportBtn = document.getElementById("measure_export_csv");
+				var exportBtn = document.getElementById("cross_section_csv");
 				if (exportBtn) {
 					var self = this;
 					exportBtn.addEventListener("click", function () {
@@ -1565,7 +1591,7 @@ Q3D.E = function (id) {
 
 						var a = document.createElement("a");
 						a.href = url;
-						a.download = "measure_profile.csv";
+						a.download = "cross_section_data.csv";
 						document.body.appendChild(a);
 						a.click();
 						document.body.removeChild(a);
@@ -1574,7 +1600,7 @@ Q3D.E = function (id) {
 				}
 
 				// Draw elevation profile graph
-				var canvas = document.getElementById("measure_profile_chart");
+				var canvas = document.getElementById("cross_section_data_chart");
 				if (canvas && this.profile && this.profile.length > 1) {
 					var ctx = canvas.getContext("2d");
 					var w = canvas.width;
@@ -1617,6 +1643,46 @@ Q3D.E = function (id) {
 					ctx.lineTo(w - padding, h - padding);
 					ctx.stroke();
 
+					// Axis ticks and numeric labels (in meters)
+					ctx.fillStyle = "#ccc";
+					ctx.font = "10px Arial";
+
+					// Y axis (elevation) ticks
+					var yTicks = 4;
+					for (var yi = 0; yi <= yTicks; yi++) {
+						var yValue = minY + (yi * (maxY - minY) / yTicks);
+						var yPos = h - padding - (yValue - minY) * yScale;
+
+                        // tick
+						ctx.beginPath();
+						ctx.moveTo(padding - 4, yPos);
+						ctx.lineTo(padding, yPos);
+						ctx.stroke();
+
+                        // label
+						ctx.textAlign = "right";
+						ctx.textBaseline = "middle";
+						ctx.fillText(yValue.toFixed(0), padding - 6, yPos);
+					}
+
+					// X axis (distance) ticks
+					var xTicks = 4;
+					for (var xi = 0; xi <= xTicks; xi++) {
+						var xValue = minX + (xi * (maxX - minX) / xTicks);
+						var xPos = padding + (xValue - minX) * xScale;
+
+                        // tick
+						ctx.beginPath();
+						ctx.moveTo(xPos, h - padding);
+						ctx.lineTo(xPos, h - padding + 4);
+						ctx.stroke();
+
+                        // label
+						ctx.textAlign = "center";
+						ctx.textBaseline = "top";
+						ctx.fillText(xValue.toFixed(0), xPos, h - padding + 6);
+					}
+
 					// Profile line
 					ctx.strokeStyle = "#4fc3f7";
 					ctx.lineWidth = 2;
@@ -1630,26 +1696,26 @@ Q3D.E = function (id) {
 					}
 					ctx.stroke();
 
-					// Labels
+					// Axis titles
 					ctx.fillStyle = "#ccc";
 					ctx.font = "10px Arial";
 					ctx.textAlign = "left";
 					ctx.fillText("Distance (m)", padding, h - 8);
 					ctx.save();
-					ctx.translate(10, h / 2);
-					ctx.rotate(-Math.PI / 2);
+					ctx.translate(0, (h/2) - 90);
+					// ctx.rotate(-Math.PI / 2);
 					ctx.fillText("Elevation (m)", 0, 0);
 					ctx.restore();
 				}
 
 				// Graph export
-				var chartBtn = document.getElementById("measure_export_chart");
+				var chartBtn = document.getElementById("cross_section_chart");
 				if (chartBtn && canvas) {
 					chartBtn.addEventListener("click", function () {
 						var url = canvas.toDataURL("image/png");
 						var a = document.createElement("a");
 						a.href = url;
-						a.download = "measure_profile.png";
+						a.download = "cross_section_data.png";
 						document.body.appendChild(a);
 						a.click();
 						document.body.removeChild(a);
